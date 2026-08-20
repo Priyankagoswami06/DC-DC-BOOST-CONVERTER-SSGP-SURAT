@@ -1,22 +1,14 @@
-# Experiment
+# Experiment Procedure
 
-## Aim
-To study the operation and performance of a DC-DC boost converter using an interactive virtual laboratory.
+1. Set Vin, duty cycle and switching frequency.
+2. Set L, C and Rload.
+3. Enter practical ESR and semiconductor parameters.
+4. Run the simulation.
+5. Observe Vout, Iout, efficiency and CCM/DCM.
+6. Start animation to observe current direction.
+7. Inspect all waveforms.
+8. Run parameter sweeps.
+9. Add readings to the observation table.
+10. Export the observation table as CSV.
 
-## Procedure
-1. Set Vin.
-2. Set duty cycle.
-3. Set switching frequency.
-4. Set L, C and load resistance.
-5. Optionally set non-ideal component parameters.
-6. Run the simulation.
-7. Observe the circuit animation and waveforms.
-8. Record readings.
-9. Perform a parameter sweep.
-10. Compare ideal and simulated results.
-
-## Observation
-Record Vin, duty cycle, Vout, Iout, Pout, efficiency and operating mode.
-
-## Conclusion
-The relationship between duty cycle and output voltage can be studied and the effect of non-ideal losses can be observed.
+11. Observe the green animated arrows: during MOSFET ON they follow Vin → Inductor → MOSFET → Ground; during MOSFET OFF they follow Vin → Inductor → Diode → Capacitor/Load → Ground.

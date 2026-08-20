@@ -1,71 +1,66 @@
 window.BoostSim = (() => {
-  const val = id => Number(document.getElementById(id).value);
-  function params(){
-    return {
-      vin:val("vin"), rs:val("rs"), duty:val("duty")/100, freq:val("freq")*1000,
-      tr:val("tr")*1e-9, tf:val("tf")*1e-9, L:val("inductance")*1e-3, lesr:val("lesr"),
-      iinit:val("iinit"), C:val("capacitance")*1e-6, cesr:val("cesr"), vinit:val("vinit"),
-      R:val("load"), rdson:val("rdson"), vgs:val("vgs"), vth:val("vth"),
-      vf:val("vf"), dr:val("dr"), trr:val("trr")*1e-9
-    };
-  }
-  function validate(p){
-    const errors=[];
-    if(!(p.vin>0)) errors.push("Vin must be greater than 0.");
-    if(!(p.duty>=.05 && p.duty<=.90)) errors.push("Duty cycle must be between 5% and 90%.");
-    if(!(p.freq>0)) errors.push("Switching frequency must be greater than 0.");
-    if(!(p.L>0)) errors.push("Inductance must be greater than 0.");
-    if(!(p.C>0)) errors.push("Capacitance must be greater than 0.");
-    if(!(p.R>0)) errors.push("Load resistance must be greater than 0.");
-    return errors;
-  }
-  function calculate(p){
-    const T=1/p.freq, ton=p.duty*T, toff=T-ton;
-    const idealV=p.vin/(1-p.duty);
-    const rippleIL=p.vin*p.duty/(p.L*p.freq);
-    const idealIout=idealV/p.R;
-    const idealPout=idealV*idealIout;
-    const ilAvgIdeal=idealPout/p.vin;
-    const ilMin=ilAvgIdeal-rippleIL/2;
-    const ilPeak=ilAvgIdeal+rippleIL/2;
-    const mode=ilMin>0 ? "CCM" : "DCM";
+  const $ = id => document.getElementById(id);
+  let last = null;
+  const n = id => Number($(id).value);
 
-    // Educational non-ideal correction. The time-domain plot uses the same operating point.
-    const mosLoss=ilAvgIdeal*ilAvgIdeal*p.rdson*p.duty;
-    const diodeLoss=Math.max(0,idealIout)*(p.vf + idealIout*p.dr)*(1-p.duty);
-    const indLoss=ilAvgIdeal*ilAvgIdeal*p.lesr;
-    const capRms=idealIout*Math.sqrt(Math.max(p.duty*(1-p.duty),0.0001));
-    const capLoss=capRms*capRms*p.cesr;
-    const swLoss=.5*idealV*ilAvgIdeal*(p.tr+p.tf)*p.freq;
-    const sourceLoss=ilAvgIdeal*ilAvgIdeal*p.rs;
-    const totalLoss=mosLoss+diodeLoss+indLoss+capLoss+swLoss+sourceLoss;
-    const pin=idealPout+totalLoss;
-    const eta=Math.max(0,Math.min(100,idealPout/pin*100));
-    const vout=Math.max(0,idealV*(eta/100) - p.vf*(1-p.duty));
-    const iout=vout/p.R;
+  function read(){
+    return {vin:n("vin"),rs:n("rs"),rload:n("rload"),d:n("duty")/100,fs:n("fs")*1000,
+      deadtime:n("deadtime")*1e-9,vgs:n("vgs"),vth:n("vth"),L:n("L")/1000,lesr:n("lesr"),
+      iinit:n("iinit"),C:n("C")*1e-6,cesr:n("cesr"),vinit:n("vinit"),rdson:n("rdson"),
+      vf:n("vf"),dr:n("dr"),trr:n("trr")*1e-9,tr:n("tr")*1e-9,tf:n("tf")*1e-9};
+  }
+
+  function calculate(p=read()){
+    if(p.d<=0 || p.d>=1 || p.L<=0 || p.C<=0 || p.rload<=0 || p.vin<=0) throw new Error("Check Vin, duty cycle, L, C and load values.");
+    const ideal=p.vin/(1-p.d);
+    const effDutyLoss = 1 + p.rdson*p.d/Math.max(p.rload,0.01) + p.lesr/p.rload;
+    const diodeDrop = p.vf*(1-p.d);
+    const practical=Math.max(p.vin*(1-p.d*0.03)/(1-p.d) - diodeDrop, p.vin*0.5);
+    const vout=practical/effDutyLoss;
+    const iout=vout/p.rload;
+    const dIL=p.vin*p.d/(p.L*p.fs);
+    const ilavg=Math.max(iout/(1-p.d), iout);
+    const ilpeak=ilavg+dIL/2;
+    const ilmin=ilavg-dIL/2;
+    const mode=ilmin>0 ? "CCM" : "DCM";
+    const dV=iout*p.d/(p.C*p.fs)+iout*p.cesr;
+    const conduction=p.rdson*(ilavg**2)*p.d + p.lesr*(ilavg**2) + p.dr*(iout**2)*(1-p.d) + p.vf*iout*(1-p.d) + p.rs*(ilavg**2);
+    const switching=0.5*p.vin*ilavg*(p.tr+p.tf)*p.fs;
+    const recovery=0.5*p.vin*iout*p.trr*p.fs*0.1;
+    const loss=Math.max(0,conduction+switching+recovery);
     const pout=vout*iout;
-    const gain=vout/p.vin;
-    const vRipple=(iout*p.duty/(p.C*p.freq)) + iout*p.cesr*0.1;
-    const error=Math.abs(idealV-vout)/idealV*100;
-    return {T,ton,toff,idealV,vout,iout,pin,pout,eta,gain,rippleIL,ilAvg:ilAvgIdeal,ilMin,ilPeak,
-      vRipple,totalLoss,mosLoss,diodeLoss,indLoss,capLoss,swLoss,sourceLoss,mode,error};
+    const pin=pout+loss;
+    const eff=pin>0?100*pout/pin:0;
+    return {p,ideal,vout,iout,pout,pin,eff,gain:vout/p.vin,ilavg,ilpeak,ilmin,dIL, dV,loss,mode,error:100*(vout-ideal)/ideal};
   }
-  function waveforms(p,r,N=240){
-    const dt=r.T/N, t=[], pwm=[], il=[], vout=[], id=[], isw=[], vc=[];
-    const v=r.vout, avg=r.ilAvg, rip=r.rippleIL;
+
+  function waveform(r, type){
+    const p=r.p, N=500, period=1/p.fs, arr=[];
     for(let k=0;k<N;k++){
-      const time=k*dt, phase=(time%r.T)/r.T, on=phase<p.duty;
-      t.push(time*1e6);
-      pwm.push(on?1:0);
-      il.push(avg + (on ? -1 : 1)*0.5*rip*(on?1:-1));
-      // A smoothed ripple model for educational visualization.
-      const ripple=v*r.vRipple/Math.max(v,0.001);
-      vc.push(v + (phase<0.5 ? ripple*(phase*2) : ripple*(2-2*phase)) - ripple/2);
-      vout.push(v + (vc[vc.length-1]-v)*0.15);
-      id.push(on?0:Math.max(0,il[il.length-1]));
-      isw.push(on?Math.max(0,il[il.length-1]):0);
+      const t=(k/N)*period*2; // two periods
+      const phase=(t%period)/period;
+      const on=phase<p.d;
+      const tri=on ? -0.5+phase/p.d : 0.5-(phase-p.d)/(1-p.d);
+      const il=Math.max(0,r.ilavg+r.dIL*tri);
+      const vout=r.vout + r.dV*0.5*Math.sin(2*Math.PI*phase);
+      let y=0;
+      if(type==="gate") y=on?1:0;
+      if(type==="il") y=il;
+      if(type==="vout") y=vout;
+      if(type==="diode") y=on?0:il;
+      if(type==="mosfet") y=on?il:0;
+      if(type==="cap") y=(on?-r.iout:il-r.iout);
+      if(type==="input") y=il;
+      if(type==="inductorVoltage") y=on?(p.vin-il*p.lesr):-(r.vout+p.vf-p.vin);
+      arr.push({x:t*1e6,y});
     }
-    return {t,pwm,il,vout,id,isw,vc};
+    return arr;
   }
-  return {params,validate,calculate,waveforms};
+
+  function validate(p){
+    if(p.vgs<=p.vth) throw new Error("VGS must be greater than Vth for MOSFET turn-on.");
+    return true;
+  }
+
+  return {read,calculate,waveform,validate,get last(){return last},set last(v){last=v}};
 })();

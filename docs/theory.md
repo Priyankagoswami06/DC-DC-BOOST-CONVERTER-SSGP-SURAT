@@ -1,33 +1,17 @@
 # Theory
 
-A boost converter is a non-isolated DC-DC converter that normally produces an output voltage higher than its input.
+For an ideal boost converter operating in CCM:
 
-For an ideal converter in continuous conduction mode:
+`Vout = Vin / (1 - D)`
 
-Vout = Vin / (1 - D)
+The inductor stores energy while the switch is ON and transfers energy to the output through the diode while the switch is OFF.
 
-where D is the duty ratio.
+Approximate inductor ripple:
 
-## Switching states
+`ΔIL ≈ Vin D / (L fs)`
 
-### MOSFET ON
-The inductor is connected to the source and stores energy. The diode is reverse biased.
+Approximate output ripple:
 
-### MOSFET OFF
-The inductor releases stored energy through the diode to the capacitor and load.
+`ΔVout ≈ Iout D / (C fs)`
 
-## Important relations
-
-T = 1/fs
-
-Ton = D*T
-
-Toff = (1-D)*T
-
-Delta IL ≈ Vin*D/(L*fs)
-
-Iout = Vout/R
-
-Pout = Vout*Iout
-
-Efficiency = Pout/Pin * 100%
+The browser model additionally includes simplified ESR, semiconductor drops and switching-loss terms.

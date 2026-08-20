@@ -1,53 +1,47 @@
-# DC-DC Boost Converter Virtual Lab
+# DC-DC Boost Converter Virtual Lab — SSGP Surat
 
-An interactive, GitHub Pages-ready educational virtual laboratory for studying a DC-DC boost converter.
+Advanced browser-based educational virtual laboratory for a DC-DC boost converter.
 
-## Features
-
-- Adjustable input voltage, duty cycle and switching frequency
-- Inductor, capacitor and load parameters
-- MOSFET and diode non-ideal parameters
-- Ideal CCM reference and simplified non-ideal model
+## Included
+- Exact circuit image supplied by the user (`assets/Boost-Converter.png`)
+- Interactive parameter panel
+- Practical loss model
 - CCM/DCM indication
-- Animated circuit
-- PWM, inductor current, output voltage, diode current and MOSFET current waveforms
-- Efficiency and loss estimation
+- Animated current direction
+- MOSFET ON/OFF operating modes
+- Gate, inductor, output, diode, MOSFET, capacitor, input-current and inductor-voltage waveforms
 - Parameter sweep
 - Observation table
 - CSV export
-- Theory, experiment procedure, quiz and viva sections
-- Responsive UI and dark mode
-
-## Run locally
-
-Open `index.html` in a modern browser. An internet connection is required for the Chart.js CDN used by the graphs.
+- Theory, procedure, quiz and viva
 
 ## GitHub Pages
+1. Create a public repository.
+2. Upload all files/folders exactly as they appear.
+3. Settings → Pages → Deploy from a branch.
+4. Select `main` and `/ (root)`.
+5. Save and open the generated Pages URL.
 
-1. Create a GitHub repository.
-2. Upload all files while preserving the directory structure.
-3. Open **Settings → Pages**.
-4. Select **Deploy from a branch**.
-5. Select the `main` branch and `/root`.
-6. Save and open the generated Pages URL.
-
-## Educational model note
-
-The simulation is a simplified browser-based numerical model intended for teaching. It should not be used as a substitute for SPICE, detailed semiconductor models, thermal design, magnetics design, EMI analysis, or hardware qualification.
-
-## Project structure
-
+## Folder structure
 ```text
-dc-dc-boost-converter-virtual-lab/
+DC-DC-BOOST-CONVERTER-SSGP-SURAT/
 ├── index.html
 ├── style.css
 ├── README.md
 ├── assets/
+│   └── provided-reference.png
 ├── js/
 │   ├── app.js
 │   ├── simulation.js
-│   ├── waveform.js
-│   ├── sweep.js
-│   └── quiz.js
+│   └── waveforms.js
 └── docs/
+    ├── theory.md
+    ├── experiment.md
+    └── viva.md
 ```
+
+## Educational model note
+This is a browser simulation intended for teaching and visualization. It is not a replacement for a SPICE/PLECS/Simulink switching model. The practical loss terms are simplified and should be validated against laboratory hardware or a circuit simulator for research-grade work.
+
+## Live current direction
+The simulation uses the exact supplied circuit image as the base. A transparent SVG overlay adds animated green current arrows. The arrows automatically switch between MOSFET ON and OFF paths while the simulation is running.
