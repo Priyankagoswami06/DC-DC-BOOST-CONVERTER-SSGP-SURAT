@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>DC-DC Boost Converter Virtual Lab | Developed by Priyanka Goswami</title>
-<meta name="description" content="Advanced interactive DC-DC boost converter virtual laboratory with waveforms, current direction, CCM/DCM and parameter sweep.">
+<title>Advanced DC-DC Boost Converter Virtual Lab | SSGP Surat</title>
+<meta name="description" content="Interactive Boost Converter Virtual Lab with real CCM, critical and DCM operating intervals, slow current-flow animation, waveforms and measurements.">
 <link rel="stylesheet" href="style.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -12,10 +12,10 @@
 <header class="hero">
   <div>
     <div class="eyebrow">POWER ELECTRONICS • VIRTUAL LABORATORY</div>
-   <p>Organization- <strong>Dr.S.&S.S.Ghandhy College of engineering and technology,surat</strong></p>
+    <h1>⚡ DC-DC BOOST CONVERTER</h1>
     <p>Learn • Simulate • Observe • Analyze</p>
   </div>
-  <div class="hero-badge">Developed by PRIYANKA GOSWAMI</div>
+  <div class="hero-badge">SSGP SURAT</div>
 </header>
 
 <nav class="nav">
@@ -32,19 +32,21 @@
 <section id="home" class="tab active">
   <div class="grid two">
     <article class="card">
-      <div class="section-title"><span class="pill purple">Provided Reference Image</span><span class="muted">Your supplied image is kept unchanged</span></div>
-      <img class="reference-image" src="assets/Boost-Converter.png" alt="Provided DC-DC Boost Converter virtual lab reference image">
+      <div class="section-title"><span class="pill purple">Provided Reference Image</span><span class="muted">Your supplied circuit image is kept unchanged</span></div>
+      <img class="reference-image" src="assets/Boost-Converter.png" alt="Provided DC-DC Boost Converter circuit">
     </article>
     <article class="card">
-      <h2>Experiment at a glance</h2>
-      <div class="formula">V<sub>out</sub> ≈ V<sub>in</sub> / (1 − D)</div>
+      <h2>Advanced Virtual Experiment</h2>
+      <div class="formula">CCM • Critical • DCM</div>
       <ul class="feature-list">
-        <li>Advanced electrical, switching and loss parameters</li>
-        <li>CCM / DCM indication</li>
-        <li>Animated current direction for ON/OFF states</li>
-        <li>Gate, inductor, capacitor, diode and switch waveforms</li>
-        <li>Parameter sweep + observation table + CSV export</li>
-        <li>Quiz, viva and experiment procedure</li>
+        <li>Actual three-interval DCM visualization</li>
+        <li>Slow synchronized current-flow animation</li>
+        <li>Automatic CCM / Critical / DCM detection</li>
+        <li>Inductor current peak, average, minimum and RMS</li>
+        <li>Vout, Iout, Iin, Pin, Pout and efficiency</li>
+        <li>Critical inductance L<sub>crit</sub> and DCM gain</li>
+        <li>Oscilloscope-style Gate, iL, iD, iS and vout waveforms</li>
+        <li>Parameter sweep, observations and CSV export</li>
       </ul>
       <button class="primary big" onclick="activateTab('simulation')">▶ Start Virtual Experiment</button>
     </article>
@@ -61,6 +63,15 @@
       <label>Input Voltage Vin (V)<input id="vin" type="number" min="1" max="200" step="0.1" value="12"></label>
       <label>Source Resistance Rs (Ω)<input id="rs" type="number" min="0" step="0.001" value="0.10"></label>
       <label>Load Resistance Rload (Ω)<input id="rload" type="number" min="0.1" step="0.1" value="20"></label>
+
+      <h3>Operating Mode</h3>
+      <label>Mode Selector
+        <select id="modeSelector">
+          <option value="auto">Automatic CCM / Critical / DCM</option>
+          <option value="ccm">Force CCM (educational)</option>
+          <option value="dcm">Force DCM (educational)</option>
+        </select>
+      </label>
 
       <h3>Switching</h3>
       <label>Duty Cycle D (%)<input id="duty" type="number" min="5" max="90" step="1" value="50"></label>
@@ -87,6 +98,14 @@
       <label>Switch Rise Time tr (ns)<input id="tr" type="number" min="0" step="1" value="50"></label>
       <label>Switch Fall Time tf (ns)<input id="tf" type="number" min="0" step="1" value="50"></label>
 
+      <h3>Animation / Scope</h3>
+      <label>Animation Speed <input id="speed" type="range" min="0.25" max="2" step="0.25" value="0.5"><span id="speedValue" class="range-value">0.5× Slow</span></label>
+      <div class="step-buttons">
+        <button id="pauseBtn">⏸ Pause</button>
+        <button id="stepBtn">⏭ Step Cycle</button>
+        <button id="resetPhaseBtn">↺ Phase 0</button>
+      </div>
+
       <div class="btn-row">
         <button id="runBtn" class="primary">▶ Run</button>
         <button id="animateBtn">⏯ Animate</button>
@@ -97,7 +116,7 @@
     <div class="workspace">
       <div class="grid two">
         <article class="card">
-          <div class="section-title"><h2>Simple Color Circuit + Current Direction</h2><span id="stateBadge" class="state ready">READY</span></div>
+          <div class="section-title"><h2>Live Circuit + Current Flow</h2><span id="stateBadge" class="state ready">READY</span></div>
           <div class="live-circuit" id="liveCircuit" aria-label="Boost converter circuit with live current direction">
             <img src="assets/Boost-Converter.png" alt="DC-DC Boost Converter circuit diagram" class="circuit-image">
             <svg class="current-overlay" viewBox="0 0 750 312" preserveAspectRatio="none" aria-hidden="true">
@@ -109,29 +128,42 @@
               </defs>
               <g id="currentOn" class="current-group">
                 <path class="current-track" d="M 74 60 L 145 60 L 200 60 L 332 60 L 332 282" marker-end="url(#arrowGreen)"></path>
-                <circle class="current-dot" r="5" fill="#00c853"><animateMotion dur="1.1s" repeatCount="indefinite" path="M 74 60 L 145 60 L 200 60 L 332 60 L 332 282"/></circle>
-                <circle class="current-dot" r="5" fill="#00c853"><animateMotion begin="-.55s" dur="1.1s" repeatCount="indefinite" path="M 74 60 L 145 60 L 200 60 L 332 60 L 332 282"/></circle>
+                <circle class="current-dot" r="5" fill="#00c853"><animateMotion id="motionOn1" dur="2.2s" repeatCount="indefinite" path="M 74 60 L 145 60 L 200 60 L 332 60 L 332 282"/></circle>
+                <circle class="current-dot" r="5" fill="#00c853"><animateMotion id="motionOn2" begin="-1.1s" dur="2.2s" repeatCount="indefinite" path="M 74 60 L 145 60 L 200 60 L 332 60 L 332 282"/></circle>
               </g>
               <g id="currentOff" class="current-group hidden">
                 <path class="current-track" d="M 74 60 L 145 60 L 200 60 L 330 60 L 390 60 L 486 60 L 692 60 L 692 282" marker-end="url(#arrowGreen)"></path>
-                <circle class="current-dot" r="5" fill="#00c853"><animateMotion dur="1.1s" repeatCount="indefinite" path="M 74 60 L 145 60 L 200 60 L 330 60 L 390 60 L 486 60 L 692 60 L 692 282"/></circle>
-                <circle class="current-dot" r="5" fill="#00c853"><animateMotion begin="-.55s" dur="1.1s" repeatCount="indefinite" path="M 74 60 L 145 60 L 200 60 L 330 60 L 390 60 L 486 60 L 692 60 L 692 282"/></circle>
+                <circle class="current-dot" r="5" fill="#00c853"><animateMotion id="motionOff1" dur="2.2s" repeatCount="indefinite" path="M 74 60 L 145 60 L 200 60 L 330 60 L 390 60 L 486 60 L 692 60 L 692 282"/></circle>
+                <circle class="current-dot" r="5" fill="#00c853"><animateMotion id="motionOff2" begin="-1.1s" dur="2.2s" repeatCount="indefinite" path="M 74 60 L 145 60 L 200 60 L 330 60 L 390 60 L 486 60 L 692 60 L 692 282"/></circle>
+              </g>
+              <g id="currentZero" class="current-group hidden">
+                <line x1="240" y1="38" x2="510" y2="38" stroke="#7c3aed" stroke-width="3" stroke-dasharray="9 7"></line>
+                <circle cx="375" cy="38" r="7" fill="#7c3aed"></circle>
               </g>
             </svg>
-            <div class="diagram-label on-label" id="onLabel">MOSFET ON • iL → SWITCH → GND</div>
-            <div class="diagram-label off-label hidden" id="offLabel">MOSFET OFF • iL → DIODE → C/LOAD</div>
+            <div class="diagram-label on-label" id="onLabel">INTERVAL 1 • MOSFET ON • iL ↑</div>
+            <div class="diagram-label off-label hidden" id="offLabel">INTERVAL 2 • MOSFET OFF • iL ↓</div>
+            <div class="diagram-label zero-label hidden" id="zeroLabel">INTERVAL 3 • DCM • iL = 0</div>
+          </div>
+          <div class="interval-strip">
+            <span id="int1" class="interval active">1 ON</span>
+            <span id="int2" class="interval">2 OFF / DIODE</span>
+            <span id="int3" class="interval">3 ZERO CURRENT</span>
           </div>
           <div class="direction-box">
             <div><b id="stateText">State: —</b></div>
             <div id="currentPath">Current path: —</div>
             <div id="componentState">MOSFET: — • Diode: —</div>
+            <div id="intervalText">Interval: —</div>
           </div>
         </article>
+
         <article class="card">
           <h2>Live Results</h2>
           <div class="metrics">
             <div><span>Vout</span><b id="vout">—</b></div>
             <div><span>Iout</span><b id="iout">—</b></div>
+            <div><span>Iin Avg</span><b id="iin">—</b></div>
             <div><span>Pin</span><b id="pin">—</b></div>
             <div><span>Pout</span><b id="pout">—</b></div>
             <div><span>Efficiency</span><b id="eff">—</b></div>
@@ -139,30 +171,37 @@
             <div><span>IL Avg</span><b id="ilavg">—</b></div>
             <div><span>IL Peak</span><b id="ilpeak">—</b></div>
             <div><span>IL Min</span><b id="ilmin">—</b></div>
+            <div><span>IL RMS</span><b id="ilrms">—</b></div>
             <div><span>ΔIL</span><b id="ilripple">—</b></div>
             <div><span>ΔVout</span><b id="vripple">—</b></div>
+            <div><span>Lcrit</span><b id="lcrit">—</b></div>
             <div><span>Loss</span><b id="loss">—</b></div>
             <div><span>Mode</span><b id="mode">—</b></div>
-            <div><span>Ideal Vout</span><b id="ideal">—</b></div>
-            <div><span>Error</span><b id="error">—</b></div>
-            <div><span>Duty</span><b id="dutyLive">—</b></div>
+            <div><span>Ideal CCM Vout</span><b id="ideal">—</b></div>
+            <div><span>DCM Gain</span><b id="dcmgain">—</b></div>
           </div>
+          <div id="modeExplain" class="mode-explain">Run the simulation to calculate the operating mode.</div>
         </article>
       </div>
 
       <article class="card">
         <div class="section-title">
-          <h2>Advanced Waveforms</h2>
+          <h2>Interactive Oscilloscope</h2>
           <select id="waveSelect">
-            <option value="gate">Gate / PWM</option>
-            <option value="il">Inductor Current iL</option>
-            <option value="vout">Output Voltage vout</option>
-            <option value="diode">Diode Current iD</option>
+            <option value="gate">CH1 • Gate / PWM</option>
+            <option value="il">CH2 • Inductor Current iL</option>
+            <option value="vout">CH3 • Output Voltage vout</option>
+            <option value="diode">CH4 • Diode Current iD</option>
             <option value="mosfet">MOSFET Current iS</option>
             <option value="cap">Capacitor Current iC</option>
             <option value="input">Input Current iIN</option>
             <option value="inductorVoltage">Inductor Voltage vL</option>
           </select>
+        </div>
+        <div class="scope-toolbar">
+          <span>Time/div: <b id="timeDiv">2T</b></span>
+          <span>Cursor: <b id="scopeCursor">0.0 µs</b></span>
+          <span>Phase: <b id="phasePercent">0%</b></span>
         </div>
         <div class="chart-wrap"><canvas id="waveChart"></canvas></div>
       </article>
@@ -188,26 +227,17 @@
         </article>
 
         <article class="card">
-          <h2>Operating Modes</h2>
-          <div class="mode-card on">
-            <b>MODE 1 — MOSFET ON</b>
-            <p>Current direction:</p>
-            <strong>Vin → L → MOSFET → GND</strong>
-            <small>Diode OFF • Inductor stores energy</small>
-          </div>
-          <div class="mode-card off">
-            <b>MODE 2 — MOSFET OFF</b>
-            <p>Current direction:</p>
-            <strong>Vin → L → D → C / Load → GND</strong>
-            <small>Diode ON • Inductor transfers energy to output</small>
-          </div>
+          <h2>Operating Intervals</h2>
+          <div class="mode-card on"><b>INTERVAL 1 — MOSFET ON</b><p>Current:</p><strong>Vin → L → MOSFET → GND</strong><small>iL rises • diode OFF • inductor stores energy</small></div>
+          <div class="mode-card off"><b>INTERVAL 2 — MOSFET OFF / DIODE ON</b><p>Current:</p><strong>Vin → L → D → C / Load → GND</strong><small>iL falls • inductor transfers energy to output</small></div>
+          <div class="mode-card zero"><b>INTERVAL 3 — DCM ZERO CURRENT</b><p>Current:</p><strong>iL = 0 • iD = 0</strong><small>diode OFF • load is supplied by the capacitor</small></div>
         </article>
       </div>
 
       <article class="card">
         <div class="section-title"><h2>Observation Table</h2><div><button id="addReading">＋ Add Reading</button><button id="exportCsv">⇩ Export CSV</button><button id="clearObs" class="danger">Clear</button></div></div>
         <div class="table-scroll">
-          <table id="obsTable"><thead><tr><th>#</th><th>Vin</th><th>D</th><th>Vout</th><th>Iout</th><th>Pout</th><th>η</th><th>Mode</th><th>ΔIL</th></tr></thead><tbody></tbody></table>
+          <table id="obsTable"><thead><tr><th>#</th><th>Vin</th><th>D</th><th>Vout</th><th>Iout</th><th>ILavg</th><th>ILpk</th><th>η</th><th>Mode</th><th>Lcrit</th></tr></thead><tbody></tbody></table>
         </div>
       </article>
     </div>
@@ -223,14 +253,21 @@
       <div class="formula">V<sub>out</sub> = V<sub>in</sub> / (1 − D)</div>
       <h3>Inductor ripple</h3>
       <div class="formula">ΔI<sub>L</sub> ≈ V<sub>in</sub>D / (L f<sub>s</sub>)</div>
-      <h3>Output ripple (first-order)</h3>
-      <div class="formula">ΔV<sub>out</sub> ≈ I<sub>out</sub>D / (C f<sub>s</sub>)</div>
+      <h3>Critical inductance</h3>
+      <div class="formula">L<sub>crit</sub> ≈ D(1 − D)<sup>2</sup>R / (2f<sub>s</sub>)</div>
+      <h3>DCM gain model</h3>
+      <div class="formula">M<sub>DCM</sub> = [1 + √(1 + 4D²/K)] / 2, &nbsp; K = 2L/(R f<sub>s</sub>)</div>
     </article>
     <article class="card prose">
-      <h2>CCM / DCM</h2>
-      <p><b>CCM:</b> inductor current stays above zero. <b>DCM:</b> inductor current reaches zero during part of the switching period.</p>
-      <h2>Losses included in this educational model</h2>
-      <p>Source resistance, inductor ESR, capacitor ESR, MOSFET RDS(on), diode forward voltage/resistance and approximate switching-loss terms are included to make the results more realistic than the ideal formula alone.</p>
+      <h2>CCM / Critical / DCM</h2>
+      <p><b>CCM:</b> inductor current stays above zero. <b>Critical:</b> the minimum current just reaches zero at the end of the diode interval. <b>DCM:</b> inductor current reaches zero before the switching period ends, creating a third zero-current interval.</p>
+      <h3>Three DCM intervals</h3>
+      <ol>
+        <li><b>Switch ON:</b> inductor current increases.</li>
+        <li><b>Switch OFF / diode ON:</b> inductor current decreases toward zero.</li>
+        <li><b>Zero-current interval:</b> iL = 0 and diode current is zero until the next switching cycle.</li>
+      </ol>
+      <p>The browser model includes simplified ESR, semiconductor drops and switching-loss terms. It is intended for teaching and visualization rather than research-grade power-stage verification.</p>
     </article>
   </div>
 </section>
@@ -239,24 +276,26 @@
   <article class="card prose">
     <h2>Experiment Procedure</h2>
     <ol>
-      <li>Enter Vin, duty cycle, switching frequency, L, C and load.</li>
-      <li>Set ESR, MOSFET, diode and switching parameters.</li>
-      <li>Press <b>Run</b> and observe live values.</li>
-      <li>Press <b>Animate</b> and watch the current direction change between ON and OFF states.</li>
-      <li>Select each waveform and compare switching behavior.</li>
-      <li>Run a parameter sweep for duty cycle, input voltage, load or component values.</li>
-      <li>Add selected readings to the observation table.</li>
-      <li>Export the table as CSV for your lab report.</li>
+      <li>Set Vin, duty cycle and switching frequency.</li>
+      <li>Set L, C and Rload.</li>
+      <li>Enter practical ESR and semiconductor parameters.</li>
+      <li>Run the simulation.</li>
+      <li>Observe Vout, Iout, efficiency and CCM/DCM.</li>
+      <li>Start animation and keep the default 0.5× speed for a clear view.</li>
+      <li>Use Pause or Step Cycle to inspect each switching cycle.</li>
+      <li>Inspect Gate, iL, iD, iS and other waveforms.</li>
+      <li>Reduce L or increase Rload to demonstrate the CCM → Critical → DCM transition.</li>
+      <li>Add readings and export the observation table as CSV.</li>
     </ol>
-    <h2>Expected result</h2>
-    <p>Increasing duty cycle increases the boost conversion ratio. Practical losses reduce the output voltage and efficiency compared with the ideal equation.</p>
+    <h2>Expected DCM observation</h2>
+    <p>When the converter enters DCM, iL falls to zero before the switching period ends. The simulation explicitly displays the third zero-current interval instead of simply relabeling the waveform.</p>
   </article>
 </section>
 
 <section id="observations" class="tab">
   <article class="card prose">
     <h2>Observation Guidelines</h2>
-    <p>For a typical study, keep Vin fixed and vary duty cycle. Record Vout, Iout, Pout, efficiency, inductor ripple and conduction mode. Then repeat by changing L, C, fs and Rload.</p>
+    <p>For a typical study, keep Vin fixed and vary duty cycle. Record Vout, Iout, IL average/peak, efficiency, Lcrit and conduction mode. Then repeat by changing L, fs and Rload.</p>
   </article>
 </section>
 
@@ -280,17 +319,18 @@
       <li>What is the current path when the MOSFET is ON?</li>
       <li>What is the current path when the MOSFET is OFF?</li>
       <li>What is the role of the diode?</li>
-      <li>What is CCM and DCM?</li>
+      <li>What are the three DCM operating intervals?</li>
+      <li>What is critical inductance?</li>
       <li>How does switching frequency affect ripple?</li>
-      <li>What causes efficiency to fall in a practical converter?</li>
     </ol>
   </article>
 </section>
 </main>
 
-<footer>DC-DC Boost Converter Virtual Laboratory • SSGP Surat</footer>
+<footer>Advanced DC-DC Boost Converter Virtual Laboratory • SSGP Surat</footer>
 <script src="js/simulation.js"></script>
 <script src="js/waveforms.js"></script>
+<script src="js/quiz.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>
